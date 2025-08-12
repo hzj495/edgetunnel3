@@ -1696,6 +1696,8 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
             ${clash}<br>
             ---------------------------------------------------------------<br>
             ################################################################<br>
+            ${}
+            `;
         return `<div style="font-size:13px;">${节点配置页}</div>`;
     } else {
         if (typeof fetch != 'function') {
