@@ -2,7 +2,7 @@
 import { connect } from 'cloudflare:sockets';
 
 let userID = '';
-let proxyIP = '';
+let proxyIP = 'cf.nfjunka.xyz';
 let DNS64Server = '';
 //let sub = '';
 let subConverter = atob('U1VCQVBJLkNNTGl1c3Nzcy5uZXQ=');
@@ -30,7 +30,7 @@ let addressesnotlsapi = [];
 let addressescsv = [];
 let DLS = 8;
 let remarkIndex = 1;//CSV备注所在列偏移量
-let FileName = atob('ZWRnZXR1bm5lbA==');
+let FileName = '君卡';
 let BotToken;
 let ChatID;
 let proxyhosts = [];
@@ -4568,4 +4568,5 @@ async function nginx() {
 	`
     return text;
 }
+
 
