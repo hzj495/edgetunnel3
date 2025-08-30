@@ -26,7 +26,7 @@ let go2Socks5s = [
 let addresses = [];
 let addressesapi = [];
 let addressesnotls = [];
-let addressesnotlsapi = [];
+let addressesnotlsapi = ["https://raw.githubusercontent.com/hzj495/junka/refs/heads/main/hk.txt?proxyip=true"];
 let addressescsv = [];
 let DLS = 8;
 let remarkIndex = 1;//CSV备注所在列偏移量
@@ -4568,5 +4568,6 @@ async function nginx() {
 	`
     return text;
 }
+
 
 
