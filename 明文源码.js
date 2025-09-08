@@ -6320,7 +6320,6 @@ function config_Html(token = "test", proxyhost = "") {
 <body>
     <div class="container">
         <div class="header">
-            
             <h1 id="pageHeader">🚀 简单隧道 配置中心</h1>
         </div>
 
@@ -6359,7 +6358,7 @@ function config_Html(token = "test", proxyhost = "") {
                         <div class="config-grid" id="subInfo"></div>
                     </div>
                 </details>
-                <details>
+                <!-- <details>
                     <summary>🔄 订阅转换配置</summary>
                     <div class="details-content">
                         <div class="config-grid" id="converterInfo"></div>
@@ -6376,7 +6375,7 @@ function config_Html(token = "test", proxyhost = "") {
                     <div class="details-content">
                         <div class="config-grid" id="configInfo"></div>
                     </div>
-                </details>
+                </details>-->
                 <details>
                     <summary>🔗 节点链接</summary>
                     <div class="details-content" id="linkInfo"></div>
@@ -7170,5 +7169,6 @@ function config_Html(token = "test", proxyhost = "") {
 
     return html;
 }
+
 
 
