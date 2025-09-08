@@ -6343,7 +6343,7 @@ function config_Html(token = "test", proxyhost = "") {
 
             <!-- 详细配置 -->
             <div class="section details-section">
-                <details>
+               <!-- <details>
                     <summary>
                         <div class="summary-content">
                             <div class="summary-title">📡 优选订阅配置</div>
@@ -6357,7 +6357,7 @@ function config_Html(token = "test", proxyhost = "") {
                     <div class="details-content">
                         <div class="config-grid" id="subInfo"></div>
                     </div>
-                </details>
+                </details> -->
                 <!-- <details>
                     <summary>🔄 订阅转换配置</summary>
                     <div class="details-content">
@@ -7169,6 +7169,7 @@ function config_Html(token = "test", proxyhost = "") {
 
     return html;
 }
+
 
 
 
