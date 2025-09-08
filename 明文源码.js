@@ -206,7 +206,7 @@ export default {
                         },
                     });
                 } else if (路径 == `/${fakeUserID}`) {
-                    const fakeConfig = await 生成配置信息(userID, request.headers.get('Host'), sub, 'CF-Workers-SUB', RproxyIP, url, fakeUserID, fakeHostName, env);
+                    const fakeConfig = await 生成信息(userID, request.headers.get('Host'), sub, 'CF-Workers-SUB', RproxyIP, url, fakeUserID, fakeHostName, env);
                     return new Response(`${fakeConfig}`, { status: 200 });
                 } else if ((url.pathname == `/${动态UUID}/config.json` || 路径 == `/${userID}/config.json`) && url.searchParams.get('token') === await 双重哈希(fakeUserID + UA)) {
                     return await config_Json(userID, request.headers.get('Host'), sub, UA, RproxyIP, url, fakeUserID, fakeHostName, env);
@@ -6320,7 +6320,7 @@ function config_Html(token = "test", proxyhost = "") {
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="pageHeader">🚀 简单隧道 配置中心</h1>
+            <h1 id="pageHeader">🚀 君卡 配置中心</h1>
         </div>
 
         <div id="loading" class="loading">
@@ -7169,6 +7169,7 @@ function config_Html(token = "test", proxyhost = "") {
 
     return html;
 }
+
 
 
 
