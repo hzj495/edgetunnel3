@@ -38,8 +38,8 @@ let proxyhostsURL = atob('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NtbGl1L2
 let RproxyIP = 'false';
 const httpPorts = ["8080", "8880", "2052", "2082", "2086", "2095"];
 let httpsPorts = ["2053", "2083", "2087", "2096", "8443"];
-let 有效时间 = 1;
-let 更新时间 = 2;
+let 有效时间 = 30;
+let 更新时间 = 3;
 let userIDLow;
 let userIDTime = "";
 let proxyIPPool = [];
@@ -7169,6 +7169,7 @@ function config_Html(token = "test", proxyhost = "") {
 
     return html;
 }
+
 
 
 
