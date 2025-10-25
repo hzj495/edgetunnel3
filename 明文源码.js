@@ -123,7 +123,7 @@ export default {
                 remarkIndex = Number(env.CSVREMARK) || remarkIndex;
                 BotToken = env.TGTOKEN || BotToken;
                 ChatID = env.TGID || ChatID;
-                FileName = env.SUBNAME || FileName;
+                FileName = env.SUBNAME || 君卡;
                 subEmoji = env.SUBEMOJI || env.EMOJI || subEmoji;
                 if (subEmoji == '0') subEmoji = 'false';
                 if (env.LINK) link = await 整理(env.LINK);
@@ -5733,6 +5733,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
