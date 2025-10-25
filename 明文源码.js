@@ -1,7 +1,7 @@
 ﻿
 import { connect } from 'cloudflare:sockets';
 
-let userID = '';
+let userID = '君卡';
 let proxyIP = 'cf.junkatz.com';
 //let sub = '';
 let subConverter = atob('U3ViQXBpLkNtbGlVc3NzUy5OZXQ=');
@@ -5733,6 +5733,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
