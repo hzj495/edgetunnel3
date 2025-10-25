@@ -3493,7 +3493,7 @@ async function config_Json(userID, hostName, sub, UA, 请求CF反代IP, _url, fa
             GO2SOCKS5: (go2Socks5s.includes('all in') || go2Socks5s.includes('*')) ? ["all in"] : go2Socks5s
         },
         sub: {
-            SUBNAME: FileName,
+            SUBNAME: 君卡,
             SUB: (sub && sub != "local") ? sub : "local",
             ADD: addresses,
             ADDNOTLS: addressesnotls,
@@ -5733,6 +5733,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
