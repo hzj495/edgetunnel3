@@ -26,7 +26,7 @@ let addressesnotls = [];
 let addressesnotlsapi = [];
 let addressescsv = [];
 let DLS = 8;
-let remarkIndex = 5;//CSV备注所在列偏移量
+let remarkIndex = 1;//CSV备注所在列偏移量
 let FileName = '君卡';
 let BotToken;
 let ChatID;
@@ -44,7 +44,7 @@ let path = '/?ed=2560';
 let 动态UUID = userID;
 let link = [];
 let banHosts = [atob('c3BlZWQuY2xvdWRmbGFyZS5jb20=')];
-let SCV = 'true';
+let SCV = 'false';
 let allowInsecure = '&allowInsecure=1';
 
 export default {
@@ -5733,6 +5733,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
