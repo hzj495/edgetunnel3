@@ -44,7 +44,7 @@ let path = '/?ed=2560';
 let 动态UUID = userID;
 let link = [];
 let banHosts = [atob('c3BlZWQuY2xvdWRmbGFyZS5jb20=')];
-let SCV = 'false';
+let SCV = 'true';
 let allowInsecure = '&allowInsecure=1';
 
 export default {
@@ -5733,6 +5733,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
