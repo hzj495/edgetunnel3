@@ -4479,8 +4479,8 @@ function config_Html(token = "test", proxyhost = "") {
                     <div class="details-content">
                         <div class="config-grid" id="subInfo"></div>
                     </div>
-                </details>
-                <details>
+                </details>-->
+                <!--<details>
                     <summary>🔄 订阅转换配置</summary>
                     <div class="details-content">
                         <div class="config-grid" id="converterInfo"></div>
@@ -5601,6 +5601,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
