@@ -4465,7 +4465,7 @@ function config_Html(token = "test", proxyhost = "") {
 
             <!-- 详细配置 -->
             <div class="section details-section">
-               <details>
+              <!-- <details>
                     <summary>
                         <div class="summary-content">
                             <div class="summary-title">📡 优选订阅配置</div>
@@ -4497,7 +4497,7 @@ function config_Html(token = "test", proxyhost = "") {
                     <div class="details-content">
                         <div class="config-grid" id="configInfo"></div>
                     </div>
-                </details>
+                </details>-->
                 <details>
                     <summary>🔗 节点链接</summary>
                     <div class="details-content" id="linkInfo"></div>
@@ -5601,6 +5601,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
