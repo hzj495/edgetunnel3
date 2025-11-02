@@ -4486,12 +4486,12 @@ function config_Html(token = "test", proxyhost = "") {
                         <div class="config-grid" id="converterInfo"></div>
                     </div>
                 </details>-->
-                <details>
+               <!-- <details>
                     <summary>🌐 ProxyIP配置</summary>
                     <div class="details-content">
                         <div class="config-grid" id="proxyInfo"></div>
                     </div>
-                </details>
+                </details>-->
               <!-- <details>
                     <summary>⚙️ 详细配置信息</summary>
                     <div class="details-content">
@@ -5601,6 +5601,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
