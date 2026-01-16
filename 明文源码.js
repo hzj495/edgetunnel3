@@ -21,7 +21,7 @@ let go2Socks5s = [
     '*.loadshare.org',
 ];
 let addresses = [];
-let addressesapi = [""];
+let addressesapi = ["https://raw.githubusercontent.com/hzj495/junka/refs/heads/main/dx.txt?proxyip=true"];
 let addressesnotls = [];
 let addressesnotlsapi = [];
 let addressescsv = [];
@@ -5601,6 +5601,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
