@@ -20,7 +20,7 @@ let go2Socks5s = [
     '*cloudatacdn.com',
     '*.loadshare.org',
 ];
-let addresses = ["1#客服微信：TYUIONQ,1#解锁更多地区与优惠"];
+let addresses = ["1#客服微信：TYUIONQ","1#解锁更多地区与优惠"];
 let addressesapi = ["https://raw.githubusercontent.com/hzj495/junka/refs/heads/main/dx.txt?proxyip=true"];
 let addressesnotls = [];
 let addressesnotlsapi = [];
@@ -5601,6 +5601,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
