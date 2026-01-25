@@ -1,4 +1,4 @@
-﻿
+
 import { connect } from 'cloudflare:sockets';
 
 let userID = '君卡';
@@ -4440,7 +4440,9 @@ function config_Html(token = "test", proxyhost = "") {
                     </svg>
                 </a>-->
             </div>
-            <h1 id="pageHeader">🚀 简单隧道 配置中心</h1>
+            <h1 id="pageHeader">🚀配置中心</h1>
+            <p>苹果小火箭下载：<a href="https://junkamzf.top/item/4">小火箭下载</a>|||<a href="https://www.kdocs.cn/l/cjOap53y8t3N">苹果使用教程</a></p>
+            <p>安卓下载：<a href="https://www.kdocs.cn/l/ce5Ol20FlNO7">安卓下载包/a>|||<a href="https://www.kdocs.cn/l/cocPLNM7fyGv">安卓使用教程</a></p>
         </div>
 
         <div id="loading" class="loading">
@@ -5601,7 +5603,6 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
-
 
 
 
