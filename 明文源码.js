@@ -4442,7 +4442,9 @@ function config_Html(token = "test", proxyhost = "") {
             </div>
             <h1 id="pageHeader">🚀配置中心</h1>
             <p>苹果小火箭下载：<a href="https://junkamzf.top/item/4">小火箭下载</a>|||<a href="https://www.kdocs.cn/l/cjOap53y8t3N">苹果使用教程</a></p>
-            <p>安卓下载：<a href="http://www.junkapz.cn/file.php?hash=152a569567b90e0c2ad7f9658b0877e1">安卓下载包</a>|||<a href="https://www.kdocs.cn/l/cocPLNM7fyGv">安卓使用教程</a></p>
+            <p>安卓下载：<a href="https://www.junkapz.cn/file.php?hash=152a569567b90e0c2ad7f9658b0877e1">安卓下载包</a>|||<a href="https://www.kdocs.cn/l/cocPLNM7fyGv">安卓使用教程</a></p>
+			<p>WIN下载：<a href="https://www.junkapz.cn/down.php/84937dc747b876b16a676a8c40b7473f.exe">WIN安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">win使用教程</a></p>
+            <p>Mac下载：<a href="https://www.junkapz.cn/file.php?hash=5dd8cd8314d59994b699cf24eef9374d">Mac安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">Mac使用教程</a></p>
         </div>
 
         <div id="loading" class="loading">
@@ -5603,6 +5605,7 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
+
 
 
 
