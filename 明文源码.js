@@ -4644,7 +4644,7 @@ function config_Html(token = "test", proxyhost = "") {
             const uuid = configData.config.KEY.DynamicUUID ? configData.config.KEY.TOKEN : configData.config.KEY.UUID;
             
             const subscriptions = [
-                { name: '自适应订阅', suffix: '?sub', primary: true },
+                { name: '小火煎订阅', suffix: '?sub', primary: true },
                 { name: 'Base64订阅', suffix: '?b64', primary: false },
                 { name: 'Clash订阅', suffix: '?clash', primary: false },
                 { name: 'SingBox订阅', suffix: '?sb', primary: false },
