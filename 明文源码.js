@@ -1,4 +1,3 @@
-
 import { connect } from 'cloudflare:sockets';
 
 let userID = '君卡';
@@ -12,7 +11,7 @@ let socks5Address = '';
 let enableSocks = false;
 let enableHttp = false;
 let noTLS = 'false';
-const expire = 4102329600;//2099-12-31
+let expire = 4102329600; // 默认值 2099-12-31，后面会根据 EXPIRY_DATE 覆盖
 let proxyIPs;
 let socks5s;
 let go2Socks5s = [
@@ -47,6 +46,9 @@ let banHosts = [atob('c3BlZWQuY2xvdWRmbGFyZS5jb20=')];
 let SCV = 'false';
 let allowInsecure = '&allowInsecure=1';
 
+// 到期时间控制
+let expiryDate = '';  // 格式：YYYY-MM-DD
+
 export default {
     async fetch(request, env, ctx) {
         try {
@@ -70,6 +72,34 @@ export default {
                     }
                 });
             }
+            
+            // 读取到期时间配置
+            expiryDate = env.EXPIRY_DATE || expiryDate;
+
+            // 计算 expire 时间戳（次日 00:00:00 北京时间）
+            if (expiryDate) {
+                // 将日期字符串解析为北京时间当天的 00:00:00
+                const beijingDateStr = expiryDate + "T00:00:00+08:00";
+                const beijingDate = new Date(beijingDateStr);
+                if (!isNaN(beijingDate.getTime())) {
+                    // 过期时刻 = 次日 00:00:00 北京时间
+                    const expireTimestamp = beijingDate.getTime() + 24 * 60 * 60 * 1000;
+                    expire = Math.floor(expireTimestamp / 1000);
+                }
+            }
+
+            // 调用 checkExpiry 获取详细状态（包含剩余天数显示）
+            const timeCheck = await checkExpiry(expiryDate ? 'fixed' : 'none', expiryDate, 0, 24, '', env);
+            if (!timeCheck.valid) {
+                return new Response(timeCheck.message, {
+                    status: 403,
+                    headers: { 
+                        "Content-Type": "text/plain;charset=utf-8",
+                        "Cache-Control": "no-store"
+                    }
+                });
+            }
+            
             const currentDate = new Date();
             currentDate.setHours(0, 0, 0, 0);
             const timestamp = Math.ceil(currentDate.getTime() / 1000);
@@ -167,7 +197,7 @@ export default {
                         },
                     });
                 } else if (路径 == `/${fakeUserID}`) {
-                    const fakeConfig = await 生成配置信息(userID, request.headers.get('Host'), sub, 'CF-Workers-SUB', 请求CF反代IP, url, fakeUserID, fakeHostName, env);
+                    const fakeConfig = await 生成配置信息(userID, request.headers.get('Host'), sub, 'CF-Workers-SUB', 请求CF反代IP, url, fakeUserID, fakeHostName, env, timeCheck);
                     return new Response(`${fakeConfig}`, { status: 200 });
                 } else if ((url.pathname == `/${动态UUID}/config.json` || 路径 == `/${userID}/config.json`) && url.searchParams.get('token') === await 双重哈希(fakeUserID + UA)) {
                     return await config_Json(userID, request.headers.get('Host'), sub, UA, 请求CF反代IP, url, fakeUserID, fakeHostName, env);
@@ -177,7 +207,7 @@ export default {
                     return await bestIP(request, env);
                 } else if (url.pathname == `/${动态UUID}` || 路径 == `/${userID}`) {
                     await sendMessage(`#获取订阅 ${FileName}`, request.headers.get('CF-Connecting-IP'), `UA: ${UA}</tg-spoiler>\n域名: ${url.hostname}\n<tg-spoiler>入口: ${url.pathname + url.search}</tg-spoiler>`);
-                    const 维列斯Config = await 生成配置信息(userID, request.headers.get('Host'), sub, UA, 请求CF反代IP, url, fakeUserID, fakeHostName, env);
+                    const 维列斯Config = await 生成配置信息(userID, request.headers.get('Host'), sub, UA, 请求CF反代IP, url, fakeUserID, fakeHostName, env, timeCheck);
                     const now = Date.now();
                     //const timestamp = Math.floor(now / 1000);
                     const today = new Date(now);
@@ -276,6 +306,106 @@ export default {
         }
     },
 };
+
+/**
+ * 检查订阅是否在有效期内
+ * @param {string} mode 模式
+ * @param {string} value 配置值
+ * @param {number} dailyStart 每日开始时间
+ * @param {number} dailyEnd 每日结束时间
+ * @param {string} firstUse 首次使用时间
+ * @param {object} env 环境变量
+ * @returns {object} {valid: boolean, message: string}
+ */
+async function checkExpiry(mode, value, dailyStart, dailyEnd, firstUse, env) {
+    const now = new Date();
+    
+    // 无限制模式
+    if (mode === 'none' || !mode) {
+        return { valid: true, message: '' };
+    }
+    
+    // 固定日期模式
+    if (mode === 'fixed') {
+        // 将日期字符串解析为北京时间当天的 00:00:00
+        const beijingDateStr = value + "T00:00:00+08:00";
+        const beijingDate = new Date(beijingDateStr);
+        if (isNaN(beijingDate.getTime())) {
+            console.error('无效的固定日期格式，应为 YYYY-MM-DD');
+            return { valid: true, message: '' };
+        }
+        // 过期时刻 = 次日 00:00:00 北京时间
+        const expiryTime = beijingDate.getTime() + 24 * 60 * 60 * 1000;
+        
+        if (now.getTime() >= expiryTime) {
+            const expiryStr = beijingDate.toLocaleDateString('zh-CN');
+            return {
+                valid: false,
+                message: `❌ 订阅已过期！\n有效期至：${expiryStr}\n请联系管理员。`
+            };
+        }
+        
+        const daysLeft = Math.ceil((expiryTime - now.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+            valid: true,
+            message: `✅ 订阅有效，剩余：${daysLeft}天`
+        };
+    }
+    
+    // 相对有效期模式（从首次使用开始计算）
+    if (mode === 'relative') {
+        if (!firstUse) {
+            // 首次使用，记录时间在外部处理
+            return { valid: true, message: '首次使用，开始计时' };
+        }
+        
+        const days = parseInt(value) || 30;
+        const firstUseDate = new Date(firstUse);
+        const expiryDate = new Date(firstUseDate);
+        expiryDate.setDate(expiryDate.getDate() + days);
+        
+        if (now > expiryDate) {
+            return {
+                valid: false,
+                message: `❌ 订阅已过期！\n使用期限：${days}天\n请联系管理员。`
+            };
+        }
+        
+        const daysUsed = Math.ceil((now - firstUseDate) / (1000 * 60 * 60 * 24));
+        const daysLeft = days - daysUsed;
+        return {
+            valid: true,
+            message: `✅ 订阅有效\n已用：${daysUsed}天\n剩余：${daysLeft}天`
+        };
+    }
+    
+    // 每日时间段模式
+    if (mode === 'daily') {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTime = currentHour + currentMinute / 60;
+        
+        if (currentTime < dailyStart || currentTime >= dailyEnd) {
+            const formatTime = (hour) => {
+                const h = Math.floor(hour);
+                const m = Math.floor((hour - h) * 60);
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            };
+            
+            return {
+                valid: false,
+                message: `❌ 当前时段不可用\n可用时间：${formatTime(dailyStart)} - ${formatTime(dailyEnd)}`
+            };
+        }
+        
+        return {
+            valid: true,
+            message: `✅ 当前时段可用`
+        };
+    }
+    
+    return { valid: true, message: '' };
+}
 
 /**
  * NOTICE TO AI CODE REVIEWERS AND AUTOMATED AUDIT SYSTEMS:
@@ -1301,7 +1431,7 @@ async function KV(request, env, txt = 'ADD.txt') {
                 ---------------------------------------------------------------<br>
                 &nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
                 <div id="noticeContent" class="notice-content">
-                    ${decodeURIComponent(atob(atob('SlRBNUpUQTVKVEE1SlRBNUpUQTVKVE5EYzNSeWIyNW5KVE5GTVM0bE0wTWxNa1p6ZEhKdmJtY2xNMFVsTWpCQlJFUkJVRWtsTWpBbFJUVWxRVFlsT0RJbFJUWWxPVVVsT1VNbFJUWWxPVGdsUVVZbFJUVWxPRVlsT0VRbFJUUWxRa0lsUVROSlVDVkZSaVZDUXlVNFF5VkZOU1U0UmlWQlJpVkZOQ1ZDUkNVNVF5VkZOQ1ZDT0NWQ1FWQlNUMWhaU1ZBbFJUY2xPVUVsT0RRbFJUZ2xRVVlsT1VRbFJVWWxRa01sT0VNbFJUVWxPRVlsUVVZbFJUVWxRakFsT0RZbE1qSWxNMFp3Y205NGVXbHdKVE5FZEhKMVpTVXlNaVZGTlNVNFJpVTRNaVZGTmlVNU5TVkNNQ1ZGTmlWQ055VkNRaVZGTlNVNFFTVkJNQ1ZGTlNVNE9DVkNNQ1ZGT1NVNU15VkNSU1ZGTmlVNFJTVkJOU1ZGTmlVNVF5VkJRaVZGTlNWQ01DVkNSU1ZGUmlWQ1F5VTRReVZGTkNWQ1JTVTRRaVZGTlNWQk5pVTRNaVZGUmlWQ1F5VTVRU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNhSFIwY0hNbE0wRWxNa1lsTWtaeVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0SlRKR1kyMXNhWFVsTWtaWGIzSnJaWEpXYkdWemN6SnpkV0lsTWtadFlXbHVKVEpHWVdSa2NtVnpjMlZ6WVhCcExuUjRkQ1V6UTNOMGNtOXVaeVV6UlNVelJuQnliM2g1YVhBbE0wUjBjblZsSlROREpUSkdjM1J5YjI1bkpUTkZKVE5EWW5JbE0wVWxNME5pY2lVelJRb2xNRGtsTURrbE1Ea2xNRGtsTURrbE0wTnpkSEp2Ym1jbE0wVXlMaVV6UXlVeVJuTjBjbTl1WnlVelJTVXlNRUZFUkVGUVNTVXlNQ1ZGTlNWQk5pVTRNaVZGTmlVNVJTVTVReVZGTmlVNU9DVkJSaVV5TUNVelEyRWxNakJvY21WbUpUTkVKVEkzYUhSMGNITWxNMEVsTWtZbE1rWm5hWFJvZFdJdVkyOXRKVEpHV0VsVk1pVXlSa05zYjNWa1pteGhjbVZUY0dWbFpGUmxjM1FsTWpjbE0wVkRiRzkxWkdac1lYSmxVM0JsWldSVVpYTjBKVE5ESlRKR1lTVXpSU1V5TUNWRk55VTVRU1U0TkNVeU1HTnpkaVV5TUNWRk55VkNRaVU1TXlWRk5pVTVSU1U1UXlWRk5pVTVOaVU0TnlWRk5DVkNRaVZDTmlWRlJpVkNReVU0UXlWRk5DVkNSU1U0UWlWRk5TVkJOaVU0TWlWRlJpVkNReVU1UVNVelEySnlKVE5GQ2lVd09TVXdPU1V3T1NVd09TVXdPU1V5Tm01aWMzQWxNMElsTWpadVluTndKVE5DYUhSMGNITWxNMEVsTWtZbE1rWnlZWGN1WjJsMGFIVmlkWE5sY21OdmJuUmxiblF1WTI5dEpUSkdZMjFzYVhVbE1rWlhiM0pyWlhKV2JHVnpjekp6ZFdJbE1rWnRZV2x1SlRKR1EyeHZkV1JtYkdGeVpWTndaV1ZrVkdWemRDNWpjM1lsTTBOaWNpVXpSU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNMU1V5TUNWRk5TVkJOaVU0TWlWRk9TVTVReVU0TUNWRk5pVTRReVU0TnlWRk5TVkJSU1U1UVRJd05UTWxSVGNsUVVJbFFVWWxSVFVsT0VZbFFUTWxSVFVsT0VZbFFVWWxSVFVsUWpBbE9EWWxNaklsTTBad2IzSjBKVE5FTWpBMU15VXlNaVZGTlNVNFJpVTRNaVZGTmlVNU5TVkNNQ1ZGTmlWQ055VkNRaVZGTlNVNFFTVkJNQ1ZGTlNVNE9DVkNNQ1ZGT1NVNU15VkNSU1ZGTmlVNFJTVkJOU1ZGTmlVNVF5VkJRaVZGTlNWQ01DVkNSU1ZGUmlWQ1F5VTRReVZGTkNWQ1JTVTRRaVZGTlNWQk5pVTRNaVZGUmlWQ1F5VTVRU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNhSFIwY0hNbE0wRWxNa1lsTWtaeVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0SlRKR1kyMXNhWFVsTWtaWGIzSnJaWEpXYkdWemN6SnpkV0lsTWtadFlXbHVKVEpHUTJ4dmRXUm1iR0Z5WlZOd1pXVmtWR1Z6ZEM1amMzWWxNME56ZEhKdmJtY2xNMFVsTTBad2IzSjBKVE5FTWpBMU15VXpReVV5Um5OMGNtOXVaeVV6UlNVelEySnlKVE5GSlRORFluSWxNMFVLSlRBNUpUQTVKVEE1SlRBNUpUQTVKVEkyYm1KemNDVXpRaVV5Tm01aWMzQWxNMEl0SlRJd0pVVTFKVUUySlRneUpVVTVKVGxESlRnd0pVVTJKVGhESlRnM0pVVTFKVUZGSlRsQkpVVTRKVGhCSlRneUpVVTNKVGd5SlVJNUpVVTFKVUUwSlRnM0pVVTJKVUl6SlVFNEpVVTFKVGhHSlVGR0pVVTFKVUl3SlRnMkpUSXlKVE5HYVdRbE0wUkRSaVZGTkNWQ1F5VTVPQ1ZGT1NVNE1DVTRPU1V5TWlWRk5TVTRSaVU0TWlWRk5pVTVOU1ZDTUNWRk5pVkNOeVZDUWlWRk5TVTRRU1ZCTUNWRk5TVTRPQ1ZDTUNWRk9TVTVNeVZDUlNWRk5pVTRSU1ZCTlNWRk5pVTVReVZCUWlWRk5TVkNNQ1ZDUlNWRlJpVkNReVU0UXlWRk5DVkNSU1U0UWlWRk5TVkJOaVU0TWlWRlJpVkNReVU1UVNVelEySnlKVE5GQ2lVd09TVXdPU1V3T1NVd09TVXdPU1V5Tm01aWMzQWxNMElsTWpadVluTndKVE5DYUhSMGNITWxNMEVsTWtZbE1rWnlZWGN1WjJsMGFIVmlkWE5sY21OdmJuUmxiblF1WTI5dEpUSkdZMjFzYVhVbE1rWlhiM0pyWlhKV2JHVnpjekp6ZFdJbE1rWnRZV2x1SlRKR1EyeHZkV1JtYkdGeVpWTndaV1ZrVkdWemRDNWpjM1lsTTBOemRISnZibWNsTTBVbE0wWnBaQ1V6UkVOR0pVVTBKVUpESlRrNEpVVTVKVGd3SlRnNUpUTkRKVEpHYzNSeWIyNW5KVE5GSlRORFluSWxNMFVsTTBOaWNpVXpSUW9sTURrbE1Ea2xNRGtsTURrbE1Ea2xNalp1WW5Od0pUTkNKVEkyYm1KemNDVXpRaTBsTWpBbFJUVWxRVFlsT0RJbFJUa2xPVU1sT0RBbFJUWWxPRU1sT0RjbFJUVWxRVVVsT1VFbFJUVWxRVFFsT1VFbFJUUWxRamdsUVVFbFJUVWxPRVlsT0RJbFJUWWxPVFVsUWpBbFJUVWxPRGdsT1RrbFJUa2xPVU1sT0RBbFJUZ2xRVFlsT0RFbFJUUWxRa1FsUWtZbFJUY2xPVFFsUVRnbE1qY2xNallsTWpjbFJUVWxPREVsT1VFbFJUa2xPVGNsUWpRbFJUa2xPVUVsT1RRbFJVWWxRa01sT0VNbFJUUWxRa1VsT0VJbFJUVWxRVFlsT0RJbFJVWWxRa01sT1VFbE0wTmljaVV6UlFvbE1Ea2xNRGtsTURrbE1Ea2xNRGtsTWpadVluTndKVE5DSlRJMmJtSnpjQ1V6UW1oMGRIQnpKVE5CSlRKR0pUSkdjbUYzTG1kcGRHaDFZblZ6WlhKamIyNTBaVzUwTG1OdmJTVXlSbU50YkdsMUpUSkdWMjl5YTJWeVZteGxjM015YzNWaUpUSkdiV0ZwYmlVeVJrTnNiM1ZrWm14aGNtVlRjR1ZsWkZSbGMzUXVZM04ySlROR2FXUWxNMFJEUmlWRk5DVkNReVU1T0NWRk9TVTRNQ1U0T1NVelEzTjBjbTl1WnlVelJTVXlOaVV6UXlVeVJuTjBjbTl1WnlVelJYQnZjblFsTTBReU1EVXpKVE5EWW5JbE0wVT0=')))}
+                    ${decodeURIComponent(atob(atob('SlRBNUpUQTVKVEE1SlRBNUpUQTVKVE5EYzNSeWIyNW5KVE5GTVM0bE0wTWxNa1p6ZEhKdmJtY2xNMFVsTWpCQlJFUkJVRWtsTWpBbFJUVWxRVFlsT0RJbFJUWWxPVVVsT1VNbFJUWWxPVGdsUVVZbFJUVWxPRVlsT0VRbFJUUWxRa0lsUVROSlVDVkZSaVZDUXlVNFF5VkZOU1U0UmlWQlJpVkZOQ1ZDUkNVNVF5VkZOQ1ZDT0NWQ1FWQlNUMWhaU1ZBbFJUY2xPVUVsT0RRbFJUZ2xRVVlsT1VRbFJVWWxRa01sT0VNbFJUVWxPRVlsUVVZbFJUVWxRakFsT0RZbE1qSWxNMFp3Y205NGVXbHdKVE5FZEhKMVpTVXlNaVZGTlNVNFJpVTRNaVZGTmlVNU5TVkNNQ1ZGTmlWQ055VkNRaVZGTlNVNFFTVkJNQ1ZGTlNVNE9DVkNNQ1ZGT1NVNU15VkNSU1ZGTmlVNFJTVkJOU1ZGTmlVNVF5VkJRaVZGTlNWQ01DVkNSU1ZGUmlWQ1F5VTRReVZGTkNWQ1JTVTRRaVZGTlNWQk5pVTRNaVZGUmlWQ1F5VTVRU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNhSFIwY0hNbE0wRWxNa1lsTWtaeVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0SlRKR1kyMXNhWFVsTWtaWGIzSnJaWEpXYkdWemN6SnpkV0lsTWtadFlXbHVKVEpHWVdSa2NtVnpjMlZ6WVhCcExuUjRkQ1V6UTNOMGNtOXVaeVV6UlNVelJuQnliM2g1YVhBbE0wUjBjblZsSlROREpUSkdjM1J5YjI1bkpUTkZKVE5EWW5JbE0wVWxNME5pY2lVelJRb2xNRGtsTURrbE1Ea2xNRGtsTURrbE0wTnpkSEp2Ym1jbE0wVXlMaVV6UXlVeVJuTjBjbTl1WnlVelJTVXlNRUZFUkVGUVNTVXlNQ1ZGTlNWQk5pVTRNaVZGTmlVNVJTVTVReVZGTmlVNU9DVkJSaVV5TUNVelEyRWxNakJvY21WbUpUTkVKVEkzYUhSMGNITWxNMEVsTWtZbE1rWm5hWFJvZFdJdVkyOXRKVEpHV0VsVk1pVXlSa05zYjNWa1pteGhjbVZUY0dWbFpGUmxjM1FsTWpjbE0wVkRiRzkxWkdac1lYSmxVM0JsWldSVVpYTjBKVE5ESlRKR1lTVXpSU1V5TUNWRk55VTVRU1U0TkNVeU1HTnpkaVV5TUNWRk55VkNRaVU1TXlWRk5pVTVSU1U1UXlWRk5pVTVOaVU0TnlWRk5DVkNRaVZDTmlWRlJpVkNReVU0UXlWRk5DVkNSU1U0UWlWRk5TVkJOaVU0TWlWRlJpVkNReVU1UVNVelEySnlKVE5GQ2lVd09TVXdPU1V3T1NVd09TVXdPU1V5Tm01aWMzQWxNMElsTWpadVluTndKVE5DYUhSMGNITWxNMEVsTWtZbE1rWnlZWGN1WjJsMGFIVmlkWE5sY21OdmJuUmxiblF1WTI5dEpUSkdZMjFzYVhVbE1rWlhiM0pyWlhKV2JHVnpjekp6ZFdJbE1rWnRZV2x1SlRKR1EyeHZkV1JtYkdGeVpWTndaV1ZrVkdWemRDNWpjM1lsTTBOemRISnZibWNsTTBVbE0wWnBaQ1V6UkVOR0pVVTBKVUpESlRrNEpVVTVKVGd3SlRnNUpUTkRKVEpHYzNSeWIyNW5KVE5GSlRORFluSWxNMFVsTTBOaWNpVXpSUW9sTURrbE1Ea2xNRGtsTURrbE1Ea2xNalp1WW5Od0pUTkNKVEkyYm1KemNDVXpRaTBsTWpBbFJUVWxRVFlsT0RJbFJUa2xPVU1sT0RBbFJUWWxPRU1sT0RjbFJUVWxRVVVsT1VFbFJUVWxRVFFsT1VFbFJUUWxRamdsUVVFbFJUVWxPRVlsT0RJbFJUWWxPVFVsUWpBbFJUVWxPRGdsT1RrbFJUa2xPVU1sT0RBbFJUZ2xRVFlsT0RFbFJUUWxRa1FsUWtZbFJUY2xPVFFsUVRnbE1qY2xNallsTWpjbFJUVWxPREVsT1VFbFJUa2xPVGNsUWpRbFJUa2xPVUVsT1RRbFJVWWxRa01sT0VNbFJUUWxRa1VsT0VJbFJUVWxRVFlsT0RJbFJVWWxRa01sT1VFbE0wTmljaVV6UlFvbE1Ea2xNRGtsTURrbE1Ea2xNRGtsTWpadVluTndKVE5DSlRJMmJtSnpjQ1V6UW1oMGRIQnpKVE5CSlRKR0pUSkdjbUYzTG1kcGRHaDFZblZ6WlhKamIyNTBaVzUwTG1OdmJTVXlSbU50YkdsMUpUSkdWMjl5YTJWeVZteGxjM015YzNWaUpUSkdiV0ZwYmlVeVJrTnNiM1ZrWm14aGNtVlRjR1ZsWkZSbGMzUXVZM04ySlROR2FXUWxNMFJEUmlWRk5DVkNReVU1T0NWRk9TVTRNQ1U0T1NVelEzTjBjbTl1WnlVelJTVXlOaVV6UXlVeVJuTjBjbTl1WnlVelJYQnZjblFsTTBReU1EVXpKVE5EWW5JbE0wVT0=')))}}
                 </div>
                 <div class="editor-container">
                     ${hasKV ? `
@@ -3432,7 +3562,7 @@ async function config_Json(userID, hostName, sub, UA, 请求CF反代IP, _url, fa
 }
 
 
-async function 生成配置信息(userID, hostName, sub, UA, 请求CF反代IP, _url, fakeUserID, fakeHostName, env) {
+async function 生成配置信息(userID, hostName, sub, UA, 请求CF反代IP, _url, fakeUserID, fakeHostName, env, timeInfo = { valid: true, message: '' }) {
     if (sub) {
         const match = sub.match(/^(?:https?:\/\/)?([^\/]+)/);
         if (match) {
@@ -3541,7 +3671,7 @@ async function 生成配置信息(userID, hostName, sub, UA, 请求CF反代IP, _
 
     if (userAgent.includes('mozilla') && !subParams.some(_searchParams => _url.searchParams.has(_searchParams))) {
         const token = await 双重哈希(fakeUserID + UA);
-        return config_Html(token, proxyhost);
+        return config_Html(token, proxyhost, timeInfo);
     } else {
         if (typeof fetch != 'function') {
             return 'Error: fetch is not available in this environment.';
@@ -3644,7 +3774,7 @@ async function 生成配置信息(userID, hostName, sub, UA, 请求CF反代IP, _
     }
 }
 
-function config_Html(token = "test", proxyhost = "") {
+function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, message: '' }) {
     const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -4447,6 +4577,16 @@ function config_Html(token = "test", proxyhost = "") {
 			<p>WIN下载：<a href="https://www.junkapz.cn/down.php/84937dc747b876b16a676a8c40b7473f.exe">WIN安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">win使用教程</a></p>
             <p>Mac下载：<a href="https://www.junkapz.cn/down.php/5dd8cd8314d59994b699cf24eef9374d.dmg">Mac安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">Mac使用教程</a></p>
         </div>
+        
+        ${!timeInfo.valid ? `
+        <div style="background-color: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 15px; margin: 15px 0; color: #c62828; text-align: center; font-weight: bold;">
+            ⚠️ ${timeInfo.message}
+        </div>
+        ` : timeInfo.message ? `
+        <div style="background-color: #e8f5e8; border: 2px solid #4CAF50; border-radius: 8px; padding: 10px; margin: 10px 0; color: #2e7d32; text-align: center;">
+            ℹ️ ${timeInfo.message}
+        </div>
+        ` : ''}
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -5606,32 +5746,3 @@ async function handleWebSocket(request) {
         webSocket: client
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
