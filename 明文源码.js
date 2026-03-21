@@ -19,7 +19,7 @@ let go2Socks5s = [
     '*cloudatacdn.com',
     '*.loadshare.org',
 ];
-let addresses = [];
+let addresses = ["1#🐸阿磊卡店🐸","1#续费微信：Yalei2038"];
 let addressesapi = ["https://raw.githubusercontent.com/hzj495/junka/refs/heads/main/hk.txt?proxyip=true"];
 let addressesnotls = [];
 let addressesnotlsapi = [];
