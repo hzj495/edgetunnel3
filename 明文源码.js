@@ -1,4 +1,3 @@
-// 完整代码已合并，直接复制部署即可
 import { connect } from 'cloudflare:sockets';
 
 let userID = '君卡';
@@ -497,26 +496,25 @@ function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName,
 
 
 /**
- * 双重哈希函数：使用 SHA-256 进行两次哈希，确保输出长度为 32 个十六进制字符
- * 原 MD5 输出 32 字符，现用 SHA-256 取前 32 字符保持兼容
+ * 双重MD5哈希函数
+ * 这个函数对输入文本进行两次MD5哈希，增强安全性
+ * 第二次哈希使用第一次哈希结果的一部分作为输入
  * 
  * @param {string} 文本 要哈希的文本
- * @returns {Promise<string>} 32位十六进制字符串
+ * @returns {Promise<string>} 双重哈希后的小写十六进制字符串
  */
 async function 双重哈希(文本) {
     const 编码器 = new TextEncoder();
-    // 第一次哈希使用 SHA-256
-    const 第一次哈希 = await crypto.subtle.digest('SHA-256', 编码器.encode(文本));
+
+    const 第一次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(文本));
     const 第一次哈希数组 = Array.from(new Uint8Array(第一次哈希));
     const 第一次十六进制 = 第一次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-    // 取前 32 个字符（与原 MD5 长度一致）
-    const 第一次截取 = 第一次十六进制.slice(0, 32);
-    // 第二次哈希使用 SHA-256，输入使用第一次截取的 7-27 位（20 字符，与原逻辑相同）
-    const 第二次哈希 = await crypto.subtle.digest('SHA-256', 编码器.encode(第一次截取.slice(7, 27)));
+
+    const 第二次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(第一次十六进制.slice(7, 27)));
     const 第二次哈希数组 = Array.from(new Uint8Array(第二次哈希));
     const 第二次十六进制 = 第二次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-    // 返回前 32 字符
-    return 第二次十六进制.slice(0, 32).toLowerCase();
+
+    return 第二次十六进制.toLowerCase();
 }
 
 
@@ -1068,7 +1066,7 @@ async function KV(request, env, txt = 'ADD.txt') {
                 <div class="editor-container">
                     ${hasKV ? `
                     <textarea class="editor" 
-                        placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTBBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTBBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
+                        placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
                         id="content">${content}</textarea>
                     <div class="save-container">
                         <button class="back-btn" onclick="goBack()">返回配置页</button>
@@ -3980,6 +3978,16 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             transform: translateY(-2px);
         }
 
+        /* 新增：小火煎按钮样式 */
+        .btn-shadowrocket {
+            background-color: #ff9800;
+            color: white;
+        }
+        .btn-shadowrocket:hover {
+            background-color: #f57c00;
+            transform: translateY(-2px);
+        }
+
         .details-section details {
             border-bottom: 1px solid var(--border-color);
         }
@@ -4377,12 +4385,6 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             loadConfig();
         });
 
-        // 添加到小火箭的函数
-        function addToShadowrocket(url, name) {
-            // 使用 Shadowrocket 的 URL Scheme 添加订阅
-            window.location.href = `shadowrocket://add?url=${encodeURIComponent(url)}&title=${encodeURIComponent(name)}`;
-        }
-
         async function loadConfig() {
             try {
                 const response = await fetch(window.location.pathname + '/config.json?token=${token}&t=' + Date.now());
@@ -4442,7 +4444,7 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 '<div class="button-group">' +
                     '<button class="btn btn-primary">📋 复制</button>' +
                     '<button class="btn btn-secondary">📱 二维码</button>' +
-                    '<button class="btn btn-primary" onclick="addToShadowrocket(\'' + primaryUrl + '\', \'' + primarySub.name + '\')">🚀 小火箭添加</button>' +
+                    '<button class="btn btn-shadowrocket">🚀 配置到小火煎</button>' +
                 '</div>';
             
             const primaryLinkDiv = primaryCard.querySelector('.subscription-link');
@@ -4453,6 +4455,9 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             
             const primaryQrBtn = primaryCard.querySelector('.btn-secondary');
             primaryQrBtn.addEventListener('click', () => showQRModal(primaryUrl, primarySub.name));
+            
+            const primaryShadowBtn = primaryCard.querySelector('.btn-shadowrocket');
+            primaryShadowBtn.addEventListener('click', () => openShadowrocket(primaryUrl));
             
             container.appendChild(primaryCard);
             
@@ -4479,6 +4484,7 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                     '<div class="button-group">' +
                         '<button class="btn btn-primary">📋 复制</button>' +
                         '<button class="btn btn-secondary">📱 二维码</button>' +
+                        '<button class="btn btn-shadowrocket">🚀 配置到小火煎</button>' +
                     '</div>';
                 
                 const linkDiv = card.querySelector('.subscription-link');
@@ -4489,6 +4495,9 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 
                 const qrBtn = card.querySelector('.btn-secondary');
                 qrBtn.addEventListener('click', () => showQRModal(url, sub.name));
+                
+                const shadowBtn = card.querySelector('.btn-shadowrocket');
+                shadowBtn.addEventListener('click', () => openShadowrocket(url));
                 
                 additionalContainer.appendChild(card);
             });
@@ -5041,6 +5050,20 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
         function updateGlobalSettings(type) {
             // 这个函数目前只是为了响应全局代理复选框的变化
             // 实际逻辑在保存时处理
+        }
+        // 新增：打开小火煎应用
+        function openShadowrocket(url) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (!isIOS) {
+                showToast('⚠️ 该功能仅支持 iOS 设备上的 Shadowrocket 应用', 3000);
+                return;
+            }
+            const encodedUrl = encodeURIComponent(url);
+            const scheme = 'shadowrocket://install?url=' + encodedUrl;  // 改用 install
+            window.location.href = scheme;
+            setTimeout(() => {
+                showToast('如果应用未自动打开，请检查是否已安装 Shadowrocket', 4000);
+            }, 500);
         }
 
         // 点击弹窗外部区域关闭弹窗
