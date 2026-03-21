@@ -1,3 +1,4 @@
+// 完整代码已合并，直接复制部署即可
 import { connect } from 'cloudflare:sockets';
 
 let userID = '君卡';
@@ -19,7 +20,7 @@ let go2Socks5s = [
     '*cloudatacdn.com',
     '*.loadshare.org',
 ];
-let addresses = ["1#续费微信：TYUIONQ"];
+let addresses = [];
 let addressesapi = ["https://raw.githubusercontent.com/hzj495/junka/refs/heads/main/hk.txt?proxyip=true"];
 let addressesnotls = [];
 let addressesnotlsapi = [];
@@ -496,25 +497,26 @@ function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName,
 
 
 /**
- * 双重MD5哈希函数
- * 这个函数对输入文本进行两次MD5哈希，增强安全性
- * 第二次哈希使用第一次哈希结果的一部分作为输入
+ * 双重哈希函数：使用 SHA-256 进行两次哈希，确保输出长度为 32 个十六进制字符
+ * 原 MD5 输出 32 字符，现用 SHA-256 取前 32 字符保持兼容
  * 
  * @param {string} 文本 要哈希的文本
- * @returns {Promise<string>} 双重哈希后的小写十六进制字符串
+ * @returns {Promise<string>} 32位十六进制字符串
  */
 async function 双重哈希(文本) {
     const 编码器 = new TextEncoder();
-
-    const 第一次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(文本));
+    // 第一次哈希使用 SHA-256
+    const 第一次哈希 = await crypto.subtle.digest('SHA-256', 编码器.encode(文本));
     const 第一次哈希数组 = Array.from(new Uint8Array(第一次哈希));
     const 第一次十六进制 = 第一次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-
-    const 第二次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(第一次十六进制.slice(7, 27)));
+    // 取前 32 个字符（与原 MD5 长度一致）
+    const 第一次截取 = 第一次十六进制.slice(0, 32);
+    // 第二次哈希使用 SHA-256，输入使用第一次截取的 7-27 位（20 字符，与原逻辑相同）
+    const 第二次哈希 = await crypto.subtle.digest('SHA-256', 编码器.encode(第一次截取.slice(7, 27)));
     const 第二次哈希数组 = Array.from(new Uint8Array(第二次哈希));
     const 第二次十六进制 = 第二次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-
-    return 第二次十六进制.toLowerCase();
+    // 返回前 32 字符
+    return 第二次十六进制.slice(0, 32).toLowerCase();
 }
 
 
@@ -1061,12 +1063,12 @@ async function KV(request, env, txt = 'ADD.txt') {
                 ---------------------------------------------------------------<br>
                 &nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
                 <div id="noticeContent" class="notice-content">
-                    ${decodeURIComponent(atob(atob('SlRBNUpUQTVKVEE1SlRBNUpUQTVKVE5EYzNSeWIyNW5KVE5GTVM0bE0wTWxNa1p6ZEhKdmJtY2xNMFVsTWpCQlJFUkJVRWtsTWpBbFJUVWxRVFlsT0RJbFJUWWxPVVVsT1VNbFJUWWxPVGdsUVVZbFJUVWxPRVlsT0VRbFJUUWxRa0lsUVROSlVDVkZSaVZDUXlVNFF5VkZOU1U0UmlWQlJpVkZOQ1ZDUkNVNVF5VkZOQ1ZDT0NWQ1FWQlNUMWhaU1ZBbFJUY2xPVUVsT0RRbFJUZ2xRVVlsT1VRbFJVWWxRa01sT0VNbFJUVWxPRVlsUVVZbFJUVWxRakFsT0RZbE1qSWxNMFp3Y205NGVXbHdKVE5FZEhKMVpTVXlNaVZGTlNVNFJpVTRNaVZGTmlVNU5TVkNNQ1ZGTmlWQ055VkNRaVZGTlNVNFFTVkJNQ1ZGTlNVNE9DVkNNQ1ZGT1NVNU15VkNSU1ZGTmlVNFJTVkJOU1ZGTmlVNVF5VkJRaVZGTlNWQ01DVkNSU1ZGUmlWQ1F5VTRReVZGTkNWQ1JTVTRRaVZGTlNWQk5pVTRNaVZGUmlWQ1F5VTVRU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNhSFIwY0hNbE0wRWxNa1lsTWtaeVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0SlRKR1kyMXNhWFVsTWtaWGIzSnJaWEpXYkdWemN6SnpkV0lsTWtadFlXbHVKVEpHWVdSa2NtVnpjMlZ6WVhCcExuUjRkQ1V6UTNOMGNtOXVaeVV6UlNVelJuQnliM2g1YVhBbE0wUjBjblZsSlROREpUSkdjM1J5YjI1bkpUTkZKVE5EWW5JbE0wVWxNME5pY2lVelJRb2xNRGtsTURrbE1Ea2xNRGtsTURrbE0wTnpkSEp2Ym1jbE0wVXlMaVV6UXlVeVJuTjBjbTl1WnlVelJTVXlNRUZFUkVGUVNTVXlNQ1ZGTlNWQk5pVTRNaVZGTmlVNVJTVTVReVZGTmlVNU9DVkJSaVV5TUNVelEyRWxNakJvY21WbUpUTkVKVEkzYUhSMGNITWxNMEVsTWtZbE1rWm5hWFJvZFdJdVkyOXRKVEpHV0VsVk1pVXlSa05zYjNWa1pteGhjbVZUY0dWbFpGUmxjM1FsTWpjbE0wVkRiRzkxWkdac1lYSmxVM0JsWldSVVpYTjBKVE5ESlRKR1lTVXpSU1V5TUNWRk55VTVRU1U0TkNVeU1HTnpkaVV5TUNWRk55VkNRaVU1TXlWRk5pVTVSU1U1UXlWRk5pVTVOaVU0TnlWRk5DVkNRaVZDTmlWRlJpVkNReVU0UXlWRk5DVkNSU1U0UWlWRk5TVkJOaVU0TWlWRlJpVkNReVU1UVNVelEySnlKVE5GQ2lVd09TVXdPU1V3T1NVd09TVXdPU1V5Tm01aWMzQWxNMElsTWpadVluTndKVE5DYUhSMGNITWxNMEVsTWtZbE1rWnlZWGN1WjJsMGFIVmlkWE5sY21OdmJuUmxiblF1WTI5dEpUSkdZMjFzYVhVbE1rWlhiM0pyWlhKV2JHVnpjekp6ZFdJbE1rWnRZV2x1SlRKR1EyeHZkV1JtYkdGeVpWTndaV1ZrVkdWemRDNWpjM1lsTTBOemRISnZibWNsTTBVbE0wWnBaQ1V6UkVOR0pVVTBKVUpESlRrNEpVVTVKVGd3SlRnNUpUTkRKVEpHYzNSeWIyNW5KVE5GSlRORFluSWxNMFVsTTBOaWNpVXpSUW9sTURrbE1Ea2xNRGtsTURrbE1Ea2xNalp1WW5Od0pUTkNKVEkyYm1KemNDVXpRaTBsTWpBbFJUVWxRVFlsT0RJbFJUa2xPVU1sT0RBbFJUWWxPRU1sT0RjbFJUVWxRVVVsT1VFbFJUVWxRVFFsT1VFbFJUUWxRamdsUVVFbFJUVWxPRVlsT0RJbFJUWWxPVFVsUWpBbFJUVWxPRGdsT1RrbFJUa2xPVU1sT0RBbFJUZ2xRVFlsT0RFbFJUUWxRa1FsUWtZbFJUY2xPVFFsUVRnbE1qY2xNallsTWpjbFJUVWxPREVsT1VFbFJUa2xPVGNsUWpRbFJUa2xPVUVsT1RRbFJVWWxRa01sT0VNbFJUUWxRa1VsT0VJbFJUVWxRVFlsT0RJbFJVWWxRa01sT1VFbE0wTmljaVV6UlFvbE1Ea2xNRGtsTURrbE1Ea2xNRGtsTWpadVluTndKVE5DSlRJMmJtSnpjQ1V6UW1oMGRIQnpKVE5CSlRKR0pUSkdjbUYzTG1kcGRHaDFZblZ6WlhKamIyNTBaVzUwTG1OdmJTVXlSbU50YkdsMUpUSkdWMjl5YTJWeVZteGxjM015YzNWaUpUSkdiV0ZwYmlVeVJrTnNiM1ZrWm14aGNtVlRjR1ZsWkZSbGMzUXVZM04ySlROR2FXUWxNMFJEUmlWRk5DVkNReVU1T0NWRk9TVTRNQ1U0T1NVelEzTjBjbTl1WnlVelJTVXlOaVV6UXlVeVJuTjBjbTl1WnlVelJYQnZjblFsTTBReU1EVXpKVE5EWW5JbE0wVT0=')))}}
+                    ${decodeURIComponent(atob(atob('SlRBNUpUQTVKVEE1SlRBNUpUQTVKVE5EYzNSeWIyNW5KVE5GTVM0bE0wTWxNa1p6ZEhKdmJtY2xNMFVsTWpCQlJFUkJVRWtsTWpBbFJUVWxRVFlsT0RJbFJUWWxPVVVsT1VNbFJUWWxPVGdsUVVZbFJUVWxPRVlsT0VRbFJUUWxRa0lsUVROSlVDVkZSaVZDUXlVNFF5VkZOU1U0UmlWQlJpVkZOQ1ZDUkNVNVF5VkZOQ1ZDT0NWQ1FWQlNUMWhaU1ZBbFJUY2xPVUVsT0RRbFJUZ2xRVVlsT1VRbFJVWWxRa01sT0VNbFJUVWxPRVlsUVVZbFJUVWxRakFsT0RZbE1qSWxNMFp3Y205NGVXbHdKVE5FZEhKMVpTVXlNaVZGTlNVNFJpVTRNaVZGTmlVNU5TVkNNQ1ZGTmlWQ055VkNRaVZGTlNVNFFTVkJNQ1ZGTlNVNE9DVkNNQ1ZGT1NVNU15VkNSU1ZGTmlVNFJTVkJOU1ZGTmlVNVF5VkJRaVZGTlNWQ01DVkNSU1ZGUmlWQ1F5VTRReVZGTkNWQ1JTVTRRaVZGTlNWQk5pVTRNaVZGUmlWQ1F5VTVRU1V6UTJKeUpUTkZDaVV3T1NVd09TVXdPU1V3T1NVd09TVXlObTVpYzNBbE0wSWxNalp1WW5Od0pUTkNhSFIwY0hNbE0wRWxNa1lsTWtaeVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0SlRKR1kyMXNhWFVsTWtaWGIzSnJaWEpXYkdWemN6SnpkV0lsTWtadFlXbHVKVEpHWVdSa2NtVnpjMlZ6WVhCcExuUjRkQ1V6UTNOMGNtOXVaeVV6UlNVelJuQnliM2g1YVhBbE0wUjBjblZsSlROREpUSkdjM1J5YjI1bkpUTkZKVE5EWW5JbE0wVWxNME5pY2lVelJRb2xNRGtsTURrbE1Ea2xNRGtsTURrbE0wTnpkSEp2Ym1jbE0wVXlMaVV6UXlVeVJuTjBjbTl1WnlVelJTVXlNRUZFUkVGUVNTVXlNQ1ZGTlNWQk5pVTRNaVZGTmlVNVJTVTVReVZGTmlVNU9DVkJSaVV5TUNVelEyRWxNakJvY21WbUpUTkVKVEkzYUhSMGNITWxNMEVsTWtZbE1rWm5hWFJvZFdJdVkyOXRKVEpHV0VsVk1pVXlSa05zYjNWa1pteGhjbVZUY0dWbFpGUmxjM1FsTWpjbE0wVkRiRzkxWkdac1lYSmxVM0JsWldSVVpYTjBKVE5ESlRKR1lTVXpSU1V5TUNWRk55VTVRU1U0TkNVeU1HTnpkaVV5TUNWRk55VkNRaVU1TXlWRk5pVTVSU1U1UXlWRk5pVTVOaVU0TnlWRk5DVkNRaVZDTmlWRlJpVkNReVU0UXlWRk5DVkNSU1U0UWlWRk5TVkJOaVU0TWlWRlJpVkNReVU1UVNVelEySnlKVE5GQ2lVd09TVXdPU1V3T1NVd09TVXdPU1V5Tm01aWMzQWxNMElsTWpadVluTndKVE5DYUhSMGNITWxNMEVsTWtZbE1rWnlZWGN1WjJsMGFIVmlkWE5sY21OdmJuUmxiblF1WTI5dEpUSkdZMjFzYVhVbE1rWlhiM0pyWlhKV2JHVnpjekp6ZFdJbE1rWnRZV2x1SlRKR1EyeHZkV1JtYkdGeVpWTndaV1ZrVkdWemRDNWpjM1lsTTBOemRISnZibWNsTTBVbE0wWnBaQ1V6UkVOR0pVVTBKVUpESlRrNEpVVTVKVGd3SlRnNUpUTkRKVEpHYzNSeWIyNW5KVE5GSlRORFluSWxNMFVsTTBOaWNpVXpSUW9sTURrbE1Ea2xNRGtsTURrbE1Ea2xNalp1WW5Od0pUTkNKVEkyYm1KemNDVXpRaTBsTWpBbFJUVWxRVFlsT0RJbFJUa2xPVU1sT0RBbFJUWWxPRU1sT0RjbFJUVWxRVVVsT1VFbFJUVWxRVFFsT1VFbFJUUWxRamdsUVVFbFJUVWxPRVlsT0RJbFJUWWxPVFVsUWpBbFJUVWxPRGdsT1RrbFJUa2xPVU1sT0RBbFJUZ2xRVFlsT0RFbFJUUWxRa1FsUWtZbFJUY2xPVFFsUVRnbE1qY2xNallsTWpjbFJUVWxPREVsT1VFbFJUa2xPVGNsUWpRbFJUa2xPVUVsT1RRbFJVWWxRa01sT0VNbFJUUWxRa1VsT0VJbFJUVWxRVFlsT0RJbFJVWWxRa01sT1VFbE0wTmljaVV6UlFvbE1Ea2xNRGtsTURrbE1Ea2xNRGtsTWpadVluTndKVE5DSlRJMmJtSnpjQ1V6UW1oMGRIQnpKVE5CSlRKR0pUSkdjbUYzTG1kcGRHaDFZblZ6WlhKamIyNTBaVzUwTG1OdmJTVXlSbU50YkdsMUpUSkdWMjl5YTJWeVZteGxjM015YzNWaUpUSkdiV0ZwYmlVeVJrTnNiM1ZrWm14aGNtVlRjR1ZsWkZSbGMzUXVZM04ySlROR2FXUWxNMFJEUmlWRk5DVkNReVU1T0NWRk9TVTRNQ1U0T1NVelEzTjBjbTl1WnlVelJTVXlOaVV6UXlVeVJuTjBjbTl1WnlVelJYQnZjblFsTTBReU1EVXpKVE5EWW5JbE0wVT0=')))}} 
                 </div>
                 <div class="editor-container">
                     ${hasKV ? `
                     <textarea class="editor" 
-                        placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
+                        placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTBBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTBBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
                         id="content">${content}</textarea>
                     <div class="save-container">
                         <button class="back-btn" onclick="goBack()">返回配置页</button>
@@ -4375,6 +4377,12 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             loadConfig();
         });
 
+        // 添加到小火箭的函数
+        function addToShadowrocket(url, name) {
+            // 使用 Shadowrocket 的 URL Scheme 添加订阅
+            window.location.href = `shadowrocket://add?url=${encodeURIComponent(url)}&title=${encodeURIComponent(name)}`;
+        }
+
         async function loadConfig() {
             try {
                 const response = await fetch(window.location.pathname + '/config.json?token=${token}&t=' + Date.now());
@@ -4434,6 +4442,7 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 '<div class="button-group">' +
                     '<button class="btn btn-primary">📋 复制</button>' +
                     '<button class="btn btn-secondary">📱 二维码</button>' +
+                    '<button class="btn btn-primary" onclick="addToShadowrocket(\'' + primaryUrl + '\', \'' + primarySub.name + '\')">🚀 小火箭添加</button>' +
                 '</div>';
             
             const primaryLinkDiv = primaryCard.querySelector('.subscription-link');
