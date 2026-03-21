@@ -4417,94 +4417,85 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
         }
 
         function renderSubscriptionLinks() {
-            const container = document.getElementById('subscriptionLinks');
-            const host = configData.config.HOST;
-            // 根据DynamicUUID决定使用TOKEN还是UUID
-            const uuid = configData.config.KEY.DynamicUUID ? configData.config.KEY.TOKEN : configData.config.KEY.UUID;
-            
-            const subscriptions = [
-                { name: '小火煎订阅', suffix: '?sub', primary: true },
-                { name: 'Base64订阅', suffix: '?b64', primary: false },
-                { name: 'Clash订阅', suffix: '?clash', primary: false },
-                { name: 'SingBox订阅', suffix: '?sb', primary: false },
-                { name: 'Loon订阅', suffix: '?loon', primary: false }
-            ];
+    const container = document.getElementById('subscriptionLinks');
+    const host = configData.config.HOST;
+    const uuid = configData.config.KEY.DynamicUUID ? configData.config.KEY.TOKEN : configData.config.KEY.UUID;
+    
+    const subscriptions = [
+        { name: '小火煎订阅', suffix: '?sub', primary: true },
+        { name: 'Base64订阅', suffix: '?b64', primary: false },
+        { name: 'Clash订阅', suffix: '?clash', primary: false },
+        { name: 'SingBox订阅', suffix: '?sb', primary: false },
+        { name: 'Loon订阅', suffix: '?loon', primary: false }
+    ];
 
-            container.innerHTML = '';
-            
-            // 创建主要订阅（自适应订阅）
-            const primarySub = subscriptions.find(sub => sub.primary);
-            const primaryUrl = buildSubscriptionUrl(host, uuid, primarySub.suffix);
-            
-            const primaryCard = document.createElement('div');
-            primaryCard.className = 'subscription-card';
-            primaryCard.innerHTML = 
-                '<h4>' + primarySub.name + '</h4>' +
-                '<div class="subscription-link">' + primaryUrl + '</div>' +
-                '<div class="button-group">' +
-                    '<button class="btn btn-primary">📋 复制</button>' +
-                    '<button class="btn btn-secondary">📱 二维码</button>' +
-                    '<button class="btn btn-shadowrocket">🚀 配置到小火煎</button>' +
-                '</div>';
-            
-            const primaryLinkDiv = primaryCard.querySelector('.subscription-link');
-            primaryLinkDiv.addEventListener('click', () => copyText(primaryUrl));
-            
-            const primaryCopyBtn = primaryCard.querySelector('.btn-primary');
-            primaryCopyBtn.addEventListener('click', () => copyText(primaryUrl));
-            
-            const primaryQrBtn = primaryCard.querySelector('.btn-secondary');
-            primaryQrBtn.addEventListener('click', () => showQRModal(primaryUrl, primarySub.name));
-            
-            const primaryShadowBtn = primaryCard.querySelector('.btn-shadowrocket');
-            primaryShadowBtn.addEventListener('click', () => openShadowrocket(primaryUrl));
-            
-            container.appendChild(primaryCard);
-            
-            // 创建"显示更多"按钮
-            const showMoreBtn = document.createElement('button');
-            showMoreBtn.className = 'show-more-btn';
-            showMoreBtn.textContent = '📋 更多订阅格式';
-            showMoreBtn.addEventListener('click', toggleAdditionalSubscriptions);
-            container.appendChild(showMoreBtn);
-            
-            // 创建额外订阅容器
-            const additionalContainer = document.createElement('div');
-            additionalContainer.className = 'additional-subscriptions';
-            additionalContainer.id = 'additionalSubscriptions';
-            
-            subscriptions.filter(sub => !sub.primary).forEach((sub, index) => {
-                const url = buildSubscriptionUrl(host, uuid, sub.suffix);
-                
-                const card = document.createElement('div');
-                card.className = 'subscription-card';
-                card.innerHTML = 
-                    '<h4>' + sub.name + '</h4>' +
-                    '<div class="subscription-link">' + url + '</div>' +
-                    '<div class="button-group">' +
-                        '<button class="btn btn-primary">📋 复制</button>' +
-                        '<button class="btn btn-secondary">📱 二维码</button>' +
-                        '<button class="btn btn-shadowrocket">🚀 配置到小火煎</button>' +
-                    '</div>';
-                
-                const linkDiv = card.querySelector('.subscription-link');
-                linkDiv.addEventListener('click', () => copyText(url));
-                
-                const copyBtn = card.querySelector('.btn-primary');
-                copyBtn.addEventListener('click', () => copyText(url));
-                
-                const qrBtn = card.querySelector('.btn-secondary');
-                qrBtn.addEventListener('click', () => showQRModal(url, sub.name));
-                
-                const shadowBtn = card.querySelector('.btn-shadowrocket');
-                shadowBtn.addEventListener('click', () => openShadowrocket(url));
-                
-                additionalContainer.appendChild(card);
-            });
-            
-            container.appendChild(additionalContainer);
-        }
-
+    container.innerHTML = '';
+    
+    // 创建主要订阅（自适应订阅）- 保留所有三个按钮
+    const primarySub = subscriptions.find(sub => sub.primary);
+    const primaryUrl = buildSubscriptionUrl(host, uuid, primarySub.suffix);
+    const primaryCard = document.createElement('div');
+    primaryCard.className = 'subscription-card';
+    primaryCard.innerHTML = 
+        '<h4>' + primarySub.name + '</h4>' +
+        '<div class="subscription-link">' + primaryUrl + '</div>' +
+        '<div class="button-group">' +
+            '<button class="btn btn-primary">📋 复制</button>' +
+            '<button class="btn btn-secondary">📱 二维码</button>' +
+            '<button class="btn btn-shadowrocket">🚀 配置到小火煎</button>' +   // 主卡片保留
+        '</div>';
+    
+    const primaryLinkDiv = primaryCard.querySelector('.subscription-link');
+    primaryLinkDiv.addEventListener('click', () => copyText(primaryUrl));
+    const primaryCopyBtn = primaryCard.querySelector('.btn-primary');
+    primaryCopyBtn.addEventListener('click', () => copyText(primaryUrl));
+    const primaryQrBtn = primaryCard.querySelector('.btn-secondary');
+    primaryQrBtn.addEventListener('click', () => showQRModal(primaryUrl, primarySub.name));
+    const primaryShadowBtn = primaryCard.querySelector('.btn-shadowrocket');
+    primaryShadowBtn.addEventListener('click', () => openShadowrocket(primaryUrl));
+    
+    container.appendChild(primaryCard);
+    
+    // 创建"显示更多"按钮
+    const showMoreBtn = document.createElement('button');
+    showMoreBtn.className = 'show-more-btn';
+    showMoreBtn.textContent = '📋 更多订阅格式';
+    showMoreBtn.addEventListener('click', toggleAdditionalSubscriptions);
+    container.appendChild(showMoreBtn);
+    
+    // 创建额外订阅容器
+    const additionalContainer = document.createElement('div');
+    additionalContainer.className = 'additional-subscriptions';
+    additionalContainer.id = 'additionalSubscriptions';
+    
+    subscriptions.filter(sub => !sub.primary).forEach((sub, index) => {
+        const url = buildSubscriptionUrl(host, uuid, sub.suffix);
+        
+        const card = document.createElement('div');
+        card.className = 'subscription-card';
+        // 额外卡片只保留复制和二维码两个按钮，移除小火煎按钮
+        card.innerHTML = 
+            '<h4>' + sub.name + '</h4>' +
+            '<div class="subscription-link">' + url + '</div>' +
+            '<div class="button-group">' +
+                '<button class="btn btn-primary">📋 复制</button>' +
+                '<button class="btn btn-secondary">📱 二维码</button>' +
+            '</div>';
+        
+        const linkDiv = card.querySelector('.subscription-link');
+        linkDiv.addEventListener('click', () => copyText(url));
+        
+        const copyBtn = card.querySelector('.btn-primary');
+        copyBtn.addEventListener('click', () => copyText(url));
+        
+        const qrBtn = card.querySelector('.btn-secondary');
+        qrBtn.addEventListener('click', () => showQRModal(url, sub.name));
+        
+        additionalContainer.appendChild(card);
+    });
+    
+    container.appendChild(additionalContainer);
+}
         function buildSubscriptionUrl(host, uuid, suffix) {
             let baseUrl = 'https://${proxyhost}' + host + '/' + uuid + suffix;
             
