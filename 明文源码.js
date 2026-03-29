@@ -5057,19 +5057,19 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             // 实际逻辑在保存时处理
         }
         // 新增：打开小火煎应用
-        function openShadowrocket(url) {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (!isIOS) {
-                showToast('⚠️ 该功能仅支持 iOS 设备上的 Shadowrocket 应用', 3000);
-                return;
-            }
-            const encodedUrl = encodeURIComponent(url);
-            const scheme = 'shadowrocket://install?url=' + encodedUrl;  // 改用 install
-            window.location.href = scheme;
-            setTimeout(() => {
-                showToast('如果应用未自动打开，请检查是否已安装 Shadowrocket', 4000);
-            }, 500);
-        }
+function openShadowrocket(url) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (!isIOS) {
+        showToast('⚠️ 该功能仅支持 iOS 设备上的 Shadowrocket 应用', 3000);
+        return;
+    }
+    const encodedUrl = encodeURIComponent(url);
+    const scheme = 'shadowrocket://add?url=' + encodedUrl;   // ✅ 改用 add
+    window.location.href = scheme;
+    setTimeout(() => {
+        showToast('如果应用未自动打开，请检查是否已安装 Shadowrocket', 4000);
+    }, 500);
+}
 
         // 点击弹窗外部区域关闭弹窗
         document.addEventListener('click', function(event) {
