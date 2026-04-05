@@ -4225,10 +4225,10 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 </a>-->
             </div>
             <h1 id="pageHeader">🚀配置中心</h1>
-            <p>苹果小火箭下载：<a href="https://junkamzf.top/item/4">小火箭下载</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2F81b386cec5d8dfb7cc97792a12475ffd.doc">苹果使用教程</a></p>
+            <!--<p>苹果小火箭下载：<a href="https://junkamzf.top/item/4">小火箭下载</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2F81b386cec5d8dfb7cc97792a12475ffd.doc">苹果使用教程</a></p>
             <p>安卓下载：<a href="https://www.junkapz.cn/down.php/152a569567b90e0c2ad7f9658b0877e1.apk">安卓下载包</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2F23dc7852700a405853dc8d679271648a.doc">安卓使用教程</a></p>
 			<p>WIN下载：<a href="https://www.junkapz.cn/down.php/84937dc747b876b16a676a8c40b7473f.exe">WIN安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">win使用教程</a></p>
-            <p>Mac下载：<a href="https://www.junkapz.cn/down.php/5dd8cd8314d59994b699cf24eef9374d.dmg">Mac安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">Mac使用教程</a></p>
+            <p>Mac下载：<a href="https://www.junk用教apz.cn/down.php/5dd8cd8314d59994b699cf24eef9374d.dmg">Mac安装包</a>|||<a href="https://www.kdocs.cn/l/cio5z9fk1NYe">Mac使程</a></p>-->
         </div>
         
         ${!timeInfo.valid ? `
