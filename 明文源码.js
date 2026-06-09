@@ -3522,6 +3522,73 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
             color: var(--text-light);
         }
 
+        .client-links-panel {
+            margin: 18px auto 0;
+            max-width: 820px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8fbff, #ffffff);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.08);
+        }
+
+        .client-links-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .client-links-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .client-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            line-height: 1.25;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.18);
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .client-link-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.25);
+        }
+
+        .client-link-btn.download {
+            background: #f6821f;
+            box-shadow: 0 4px 12px rgba(246, 130, 31, 0.18);
+        }
+
+        .client-link-btn.download:hover {
+            background: #e66f10;
+            box-shadow: 0 6px 16px rgba(246, 130, 31, 0.25);
+        }
+
+        .client-links-loading,
+        .client-links-empty {
+            grid-column: 1 / -1;
+            color: var(--text-light);
+            font-size: 0.92rem;
+            text-align: center;
+            padding: 8px 0;
+        }
+
         .loading {
             display: flex;
             flex-direction: column;
@@ -4200,7 +4267,23 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 height: 18px;
             }
         }
-    </style>
+    
+        @media (max-width: 768px) {
+            .client-links-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .client-link-btn {
+                font-size: 0.88rem;
+                min-height: 42px;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .client-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+</style>
 </head>
 <body>
     <div class="container">
@@ -4225,10 +4308,12 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
                 </a>-->
             </div>
             <h1 id="pageHeader">🚀配置中心</h1>
-            <p>苹果小火箭下载：<a href="https://junkamzf.top/item/4">小火箭下载</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2F45c001bbbdcbb0eb42758e451634c140.doc">苹果使用教程</a></p>
-            <p>安卓下载：<a href="https://www.junkapz.cn/down.php/152a569567b90e0c2ad7f9658b0877e1.apk">安卓下载包</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2F4aa02daae3c7657f602e698669576148.doc">安卓使用教程</a></p>
-			<p>WIN下载：<a href="https://www.junkapz.cn/down.php/84937dc747b876b16a676a8c40b7473f.exe">WIN安装包</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2Ffdd94e702464f42961c190e2ec298364.docx">win使用教程</a></p>
-            <p>Mac下载：<a href="https://www.junkapz.cn/down.php/5dd8cd8314d59994b699cf24eef9374d.dmg">Mac安装包</a>|||<a href="https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.junkapz.cn%2Fdown.php%2Ffdd94e702464f42961c190e2ec298364.docx">Mac使程</a></p>
+            <div class="client-links-panel" id="clientLinksPanel">
+                <div class="client-links-title">软件下载 / 使用教程</div>
+                <div class="client-links-grid" id="clientLinksGrid">
+                    <div class="client-links-loading">正在加载下载按钮...</div>
+                </div>
+            </div>
         </div>
         
         ${!timeInfo.valid ? `
@@ -4394,10 +4479,72 @@ function config_Html(token = "test", proxyhost = "", timeInfo = { valid: true, m
     <script src="https://cdn.jsdelivr.net/npm/@keeex/qrcodejs-kx@1.0.2/qrcode.min.js"></script>
     <script>
         let configData = null;
+        const CLIENT_LINKS_API = 'https://dh.junkamf.com/api/client-links';
 
         document.addEventListener('DOMContentLoaded', function() {
+            loadClientLinks();
             loadConfig();
         });
+
+        async function loadClientLinks() {
+            const grid = document.getElementById('clientLinksGrid');
+            if (!grid) return;
+
+            try {
+                const response = await fetch(CLIENT_LINKS_API + '?t=' + Date.now(), {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const data = await response.json();
+                renderClientLinks((data && data.links) ? data.links : {});
+            } catch (error) {
+                console.error('加载下载按钮失败:', error);
+                renderClientLinks({});
+            }
+        }
+
+        function renderClientLinks(links) {
+            const grid = document.getElementById('clientLinksGrid');
+            if (!grid) return;
+
+            const items = [
+                { key: 'shadowrocketDownload', label: '🚀 小火箭下载', type: 'download' },
+                { key: 'androidDownload', label: '🤖 安卓下载包', type: 'download' },
+                { key: 'windowsDownload', label: '💻 WIN安装包', type: 'download' },
+                { key: 'macDownload', label: '🖥️ Mac安装包', type: 'download' },
+                 { key: 'appleTutorial', label: '🍎 小火煎使用教程', type: 'tutorial' },
+                { key: 'androidTutorial', label: '📘 安卓使用教程', type: 'tutorial' },
+                { key: 'windowsTutorial', label: '📘 电脑使用教程', type: 'tutorial' },
+                { key: 'macTutorial', label: '📘 Mac使用教程', type: 'tutorial' }
+            ];
+
+            grid.innerHTML = '';
+            let count = 0;
+
+            items.forEach(function(item) {
+                const href = String((links && links[item.key]) || '').trim();
+                if (!href) return;
+
+                const a = document.createElement('a');
+                a.className = 'client-link-btn' + (item.type === 'download' ? ' download' : '');
+                a.href = href;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = item.label;
+                grid.appendChild(a);
+                count++;
+            });
+
+            if (count === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'client-links-empty';
+                empty.textContent = '下载/教程按钮还没有配置，请联系管理员';
+                grid.appendChild(empty);
+            }
+        }
 
         async function loadConfig() {
             try {
