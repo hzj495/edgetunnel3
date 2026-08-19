@@ -1,6 +1,6 @@
 import { connect } from 'cloudflare:sockets';
 
-let userID = '君卡';
+let userID = 'kka';
 let proxyIP = 'cf.junkatz.com';
 //let sub = '';
 let subConverter = atob('U3ViQXBpLkNtbGlVc3NzUy5OZXQ=');
@@ -26,7 +26,7 @@ let addressesnotlsapi = [];
 let addressescsv = [];
 let DLS = 8;
 let remarkIndex = 1;//CSV备注所在列偏移量
-let FileName = '君卡';
+let FileName = 'kka';
 let BotToken;
 let ChatID;
 let proxyhosts = [];
